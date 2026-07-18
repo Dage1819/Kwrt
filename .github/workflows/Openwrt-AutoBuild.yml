@@ -1,9 +1,6 @@
 #=================================================
 # https://github.com/P3TERX/Actions-OpenWrt
-# Description:
-  push:
-    branches:
-      - 25.12-sdk-only Build OpenWrt using GitHub Actions
+# Description: Build OpenWrt using GitHub Actions
 # Lisence: MIT
 # Author: P3TERX
 # Blog: https://p3terx.com
@@ -14,7 +11,8 @@ name: Build OpenWrt
 on:
   push:
     branches:
-      - 25.12-sdk-only 
+      - 25.12-sdk-only
+  repository_dispatch:
   repository_dispatch:
 
 env:
@@ -31,10 +29,7 @@ env:
 
 jobs:
   build:
-    runs-on:
-  push:
-    branches:
-      - 25.12-sdk-only ubuntu-latest
+    runs-on: ubuntu-latest
     
     name: Build ${{matrix.target}}
     strategy:
@@ -77,17 +72,11 @@ jobs:
       continue-on-error: true
       if: contains(github.event.action, 'pkg')
       run: |
-        status=$(curl -H "Authorization:
-  push:
-    branches:
-      - 25.12-sdk-only token ${{ secrets.TOKEN_KIDDIN9 }}" -s "https://api.github.com/repos/kiddin9/op-packages/actions/runs" | jq -r '.workflow_runs[0].status')
+        status=$(curl -H "Authorization: token ${{ secrets.TOKEN_KIDDIN9 }}" -s "https://api.github.com/repos/kiddin9/op-packages/actions/runs" | jq -r '.workflow_runs[0].status')
         if [[ "$status" == "completed" ]]; then
           curl -X POST https://api.github.com/repos/kiddin9/op-packages/dispatches \
             -H "Accept: application/vnd.github.everest-preview+json" \
-            -H "Authorization:
-  push:
-    branches:
-      - 25.12-sdk-only token ${{ secrets.TOKEN_KIDDIN9 }}" \
+            -H "Authorization: token ${{ secrets.TOKEN_KIDDIN9 }}" \
           --data '{"event_type": "update"}'
         fi
 
@@ -130,14 +119,8 @@ jobs:
       run: |
         set -x
         TAG_INFO="$(curl -gs -H 'Content-Type: application/json' \
-           -H "Authorization:
-  push:
-    branches:
-      - 25.12-sdk-only Bearer ${{ secrets.TOKEN_KIDDIN9 }}" \
-           -X POST -d '{ "query": "query {repository(owner: \"openwrt\", name: \"openwrt\") {refs(refPrefix: \"refs/tags/\", first: 4, orderBy: {field: TAG_COMMIT_DATE, direction:
-  push:
-    branches:
-      - 25.12-sdk-only DESC}) {nodes {name target { ... on Tag {tagger {date}}}}}}}"}' https://api.github.com/graphql)"
+           -H "Authorization: Bearer ${{ secrets.TOKEN_KIDDIN9 }}" \
+           -X POST -d '{ "query": "query {repository(owner: \"openwrt\", name: \"openwrt\") {refs(refPrefix: \"refs/tags/\", first: 4, orderBy: {field: TAG_COMMIT_DATE, direction: DESC}) {nodes {name target { ... on Tag {tagger {date}}}}}}}"}' https://api.github.com/graphql)"
         TAG_DATE="$( echo ${TAG_INFO} | jq -r '.data.repository.refs.nodes[] | select(.name | startswith("v25")) | .target.tagger.date' | head -n 1)"
         if [[ $(( ($(date +%s) - $(date -d "$TAG_DATE" +%s)) / 86400 )) -lt 10 || "${{ contains(github.event.action, 'tags') }}" == "true" ]]; then
         REPO_BRANCH="$( echo ${TAG_INFO} | jq -r '.data.repository.refs.nodes[].name' | grep v25 | head -n 1)"
