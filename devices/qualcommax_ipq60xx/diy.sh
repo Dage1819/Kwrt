@@ -21,3 +21,8 @@ sed -i "/ECM_INTERFACE_RAWIP_ENABLE/d"  package/nss-packages/qca-nss-ecm/Makefil
 rm -rf package/nss-packages/nss-userspace-oss
 
 sed -i "s/luci uboot-envtools wpad-openssl/luci uboot-envtools wpad-mbedtls/" target/linux/qualcommax/Makefile
+
+# === inject AmneziaWG package (added for awg build) ===
+rm -rf package/awg-openwrt
+git clone https://github.com/Slava-Shchipunov/awg-openwrt.git package/awg-openwrt
+( cd package/awg-openwrt && git checkout 9742aa540b72c4059dabe8e91366162a98499219 )
